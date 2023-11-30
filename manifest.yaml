@@ -1,20 +1,18 @@
-
-id: bisq 
-title: "Bisq"
-version: 1.9.12.1
+id: timechaincalendar
+title: "Timechain Calendar"
+version: 0.3.44
 release-notes: |
-  Fix the backup creation and restoration process.
-license: GPLv3
-wrapper-repo: "https://github.com/Start9Labs/bisq-startos"
-upstream-repo: "https://github.com/bisq-network/bisq"
-support-site: "https://github.com/bisq-network/bisq/issues"
-marketing-site: "https://bisq.network"
+  * Inital Release to StartOS
+license: mit
+wrapper-repo: "https://github.com/timechainb/timechain-calendar-startos"
+upstream-repo: "https://github.com/timechainb/timechain-calendar"
+support-site: "https://github.com/timechainb/timechain-calendar-startos/issues"
+marketing-site: "https://timechaincalendar.com"
+donation-url: "https://timechaincalendar.com"
 build: ["make"]
 description:
-  short: Buy and sell bitcoin for fiat (or other cryptocurrencies) privately and securely. 
-  long: |
-    Bisq is a decentralized bitcoin exchange network that enables secure, private and censorship-resistant exchange of bitcoin for national currencies and other cryptocurrencies over the internet.
-    The Bisq application forms a peer-to-peer network by discovering, connecting to, and working with one another to implement the Bisq trading protocol.
+  short: A purely client-side visualizer of real time data from the Bitcoin network.
+  long: A purely client-side visualizer of real time data from the Bitcoin network.
 assets:
   license: LICENSE
   icon: icon.png
@@ -22,94 +20,62 @@ assets:
 main:
   type: docker
   image: main
-  entrypoint: "/init"
+  entrypoint: docker_entrypoint.sh
   args: []
   mounts:
-    main: /root/data
-    bisq: /config/.local/share/Bisq
-health-checks:
-  web-ui:
-    name: Bisq Interface
-    success-message: Ready to visit in a web browser or RDP client
-    type: script
-config:
-  get:
-    type: script
-  set:
-    type: script
+    main: /root
+health-checks: []
+config: ~
+properties:
+  type: script
 volumes:
   main:
     type: data
-  bisq:
-    type: data
-  compat:
-    type: assets
 interfaces:
   main:
-    name: User Interface
-    description: Web user interface to display your Bisq Desktop
+    name: Network Interface
+    description: Specifies the interface to listen on for HTTP connections.
     tor-config:
       port-mapping:
         80: "3000"
-        3389: "3389"
     lan-config:
       443:
         ssl: true
         internal: 3000
-      3389:
-        ssl: false
-        internal: 3389
-    ui: true
+    ui: false
     protocols:
       - tcp
       - http
 dependencies:
-  bitcoind:
-    version: ">=0.21.1.2 <27.0.0"
+  mempool:
+    version: ">=2.0.0 <2.6.0"
     requirement:
-      type: "opt-out"
-      how: Internal bitcoind is used by default. Alternatively, Bisq's default list of nodes can be used.
-    description: Used to subscribe to new block events from a full archival node.
-    config:
-      check:
-        type: script
-      auto-configure:
-        type: script
+      type: required
+    config: ~
 backup:
   create:
     type: docker
     image: compat
     system: true
-    entrypoint: /mnt/assets/backup.sh
+    entrypoint: compat
     args:
+      - duplicity
       - create
+      - /mnt/backup
       - /root/data
-      - /config/.local/share/Bisq
     mounts:
-      BACKUP: /mnt/backup
-      compat: /mnt/assets
-      main: /root/data
-      bisq: /config/.local/share/Bisq
+      BACKUP: "/mnt/backup"
+      main: "/root/data"
   restore:
     type: docker
     image: compat
     system: true
-    entrypoint: /mnt/assets/backup.sh
+    entrypoint: compat
     args:
+      - duplicity
       - restore
+      - /mnt/backup
       - /root/data
-      - /config/.local/share/Bisq
     mounts:
-      BACKUP: /mnt/backup
-      compat: /mnt/assets
-      main: /root/data
-      bisq: /config/.local/share/Bisq
-migrations:
-  from:
-    "*":
-      type: script
-      args: ["from"]
-  to:
-    "*":
-      type: script
-      args: ["to"]
+      BACKUP: "/mnt/backup"
+      main: "/root/data"
