@@ -20,11 +20,11 @@ assets:
 main:
   type: docker
   image: main
-  entrypoint: docker_entrypoint.sh
+  entrypoint: "/init"
   args: []
   mounts:
-    main: /root
-health-checks: []
+    main: /root/data
+health-checks: {}
 config: ~
 properties:
   type: script
